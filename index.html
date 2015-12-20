@@ -1,12 +1,7 @@
 <!DOCTYPE html>
-<html>
-    
-    <head>
-    
-        <meta name="viewport" content="user-scalable=no">
-        
-    </head>
-    
+<!-- saved from url=(0067)file:///C:/Users/kwaku/Desktop/kw4ks.com/games/ldshooter/index.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+            <meta name="viewport" content="user-scalable=no">
     <style>
         #canvas{
             border : 1px solid #000;
@@ -14,29 +9,30 @@
             height : 100%;
         };
         
-    </style>
+    </style></head>
+    
+    
 
     <body>
     
-        <canvas id = 'canvas'>Your browser does not support HTML5. Please update.</canvas>
+        <canvas id="canvas" width="320" height="568">Your browser does not support HTML5. Please update.</canvas>
         
         <script>
             var canvas = document.getElementById('canvas'),
                 ctx = canvas.getContext('2d'),
-                touchX = 0,
-                touchY = 0,
-                WIDTH = window.innerWidth,
+                entities = [],
                 touched = false,
+                WIDTH = window.innerWidth,
                 HEIGHT = window.innerHeight;
             
             var Bullet = function(){
                 this.x = player.x;
                 this.y = player.y;
-                this.size = 8;
+                this.size = 32;
                 this.colour = player.colour;
                 this.velX = 0;
                 this.velY = 0;
-                this.isActive = false;
+                this.isActive = true;
                 
                 this.render = function(context){
                     context.fillStyle = this.colour;
@@ -55,9 +51,10 @@
             var player = {
                 x : (WIDTH / 2),
                 y : (HEIGHT / 2),
-                size : 24,
+                size : 64,
                 bullets : [],
                 colour : '#7219FF',
+                isActive : true,
                 
                 render : function(context){
                     context.fillStyle = this.colour;
@@ -65,9 +62,49 @@
                     context.beginPath();
                     context.arc(this.x,this.y,this.size,0,2*Math.PI);
                     context.fill();
+                },
+                
+                update : function(){
+                    if(colourChangeBTN.state === 'purple'){
+                        this.colour = '#7219FF';
+                    }
+                    
+                    else if(colourChangeBTN.state === 'pink'){
+                        this.colour = '#FF19C1';
+                    }
+                    
                 }
-
             };
+            
+            entities.push(player);
+            
+            var colourChangeBTN = {
+                x : ((WIDTH / 2) - 96),
+                y : (HEIGHT - 128),
+                width : 192,
+                height : 128,
+                state : 'purple',
+                colour : '#7219FF',
+                isActive : true,
+                
+                render : function(context){
+                    context.fillStyle = this.colour;
+                    context.fillRect(this.x, this.y, this.width, this.height);
+                },
+                
+                update : function(){
+                    if(this.state === 'purple'){
+                        this.colour = '#7219FF';
+                
+                    }
+                    
+                    else if(this.state === 'pink'){
+                        this.colour = '#FF19C1';
+                    };
+                }
+            };
+            
+            entities.push(colourChangeBTN);
             
             canvas.width = WIDTH;
             canvas.height = HEIGHT;
@@ -78,35 +115,48 @@
                 touchX = event.targetTouches[0].clientX;
                 touchY = event.targetTouches[0].clientY;
                 
+                if(touchX > colourChangeBTN.x &&
+                  touchX < (colourChangeBTN.x + colourChangeBTN.width) &&
+                  touchY > colourChangeBTN.y &&
+                  touchY < colourChangeBTN.y + colourChangeBTN.height){
+                    console.log('clicked');
+                    if(colourChangeBTN.state === 'purple'){
+                        colourChangeBTN.state = 'pink';
+                    }
+                    
+                    else if(colourChangeBTN.state === 'pink'){
+                      colourChangeBTN.state = 'purple';
+                    };
+                }
+
                 b = new Bullet()
-                b.isActive = true;
                 directionX = (touchX - player.x);
                 directionY = (touchY - player.y);
-                mag = Math.sqrt(directionX * directionX + directionY * directionY);
-                
-                b.velX = (directionX / mag) * 20;
-                b.velY = (directionY / mag) * 20;
-                
-                player.bullets.push(b);
-                
+
+                angle = Math.atan2(directionY, directionX);
+                b.velX = Math.cos(angle) * 20;
+                b.velY = Math.sin(angle) * 20;
+
+                entities.push(b);
             };
 
             function render(){
                 ctx.clearRect(0, 0, WIDTH, HEIGHT);
                 
-                player.render(ctx);
+                ctx.fillStyle = '#FFDE19';
+                ctx.fillRect(0, 0, WIDTH, HEIGHT);
                 
-                for(var i = 0; i < player.bullets.length; i++){
-                    if(player.bullets[i].isActive){
-                        player.bullets[i].render(ctx);
+                for(var i = 0; i < entities.length; i++){
+                    if(entities[i]){
+                        entities[i].render(ctx);
                     }
-                }
+                };
             };
             
             function update(){
-                for(var i = 0; i < player.bullets.length; i++){
-                    if(player.bullets[i].isActive){
-                        player.bullets[i].update();
+                for(var i = 0; i < entities.length; i++){
+                    if(entities[i].isActive){
+                        entities[i].update();
                     }
                 };
                 
@@ -119,7 +169,6 @@
                 delta;
             
             function main(){
-                console.log(touched);
                 now = Date.now();
                 delta = now - then;
                 
@@ -138,6 +187,6 @@
                 
         </script>
         
-    </body>
+    
 
-</html>
+</body></html>
