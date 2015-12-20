@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+    
+    <head>
+    
+        <meta name="viewport" content="user-scalable=no">
+        
+    </head>
+    
+    <style>
+        #canvas{
+            border : 1px solid #000;
+            width : 100%;
+            height : 100%;
+        };
+        
+    </style>
+
+    <body>
+    
+        <canvas id = 'canvas'>Your browser does not support HTML5. Please update.</canvas>
+        
+        <script>
+            var canvas = document.getElementById('canvas'),
+                ctx = canvas.getContext('2d'),
+                touchX = 0,
+                touchY = 0,
+                WIDTH = window.innerWidth,
+                touched = false,
+                HEIGHT = window.innerHeight;
+            
+            var Bullet = function(){
+                this.x = player.x;
+                this.y = player.y;
+                this.size = 8;
+                this.colour = player.colour;
+                this.velX = 0;
+                this.velY = 0;
+                this.isActive = false;
+                
+                this.render = function(context){
+                    context.fillStyle = this.colour;
+                    
+                    context.beginPath();
+                    context.arc(this.x,this.y,this.size,0,2*Math.PI);
+                    context.fill();
+                };
+                
+                this.update = function(){
+                    this.x += this.velX;
+                    this.y += this.velY;
+                };
+            };
+            
+            var player = {
+                x : (WIDTH / 2),
+                y : (HEIGHT / 2),
+                size : 24,
+                bullets : [],
+                colour : '#7219FF',
+                
+                render : function(context){
+                    context.fillStyle = this.colour;
+                    
+                    context.beginPath();
+                    context.arc(this.x,this.y,this.size,0,2*Math.PI);
+                    context.fill();
+                }
+
+            };
+            
+            canvas.width = WIDTH;
+            canvas.height = HEIGHT;
+            
+            canvas.addEventListener('touchstart', touchHandler, false);
+            
+            function touchHandler(event){
+                touchX = event.targetTouches[0].clientX;
+                touchY = event.targetTouches[0].clientY;
+                
+                b = new Bullet()
+                b.isActive = true;
+                directionX = (touchX - player.x);
+                directionY = (touchY - player.y);
+                mag = Math.sqrt(directionX * directionX + directionY * directionY);
+                
+                b.velX = (directionX / mag) * 20;
+                b.velY = (directionY / mag) * 20;
+                
+                player.bullets.push(b);
+                
+            };
+
+            function render(){
+                ctx.clearRect(0, 0, WIDTH, HEIGHT);
+                
+                player.render(ctx);
+                
+                for(var i = 0; i < player.bullets.length; i++){
+                    if(player.bullets[i].isActive){
+                        player.bullets[i].render(ctx);
+                    }
+                }
+            };
+            
+            function update(){
+                for(var i = 0; i < player.bullets.length; i++){
+                    if(player.bullets[i].isActive){
+                        player.bullets[i].update();
+                    }
+                };
+                
+            };
+            
+            var fps = 60,
+                interval = 1000 / 60,
+                then = Date.now(),
+                now,
+                delta;
+            
+            function main(){
+                console.log(touched);
+                now = Date.now();
+                delta = now - then;
+                
+                if(delta > interval){
+                    render();
+                    
+                    then = now - (delta % interval);
+                };
+                
+                update();
+                window.requestAnimationFrame(main);
+            };
+            
+            main();
+            
+                
+        </script>
+        
+    </body>
+
+</html>
