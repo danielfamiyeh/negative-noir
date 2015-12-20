@@ -21,6 +21,7 @@
             var canvas = document.getElementById('canvas'),
                 ctx = canvas.getContext('2d'),
                 entities = [],
+                enemyList = [],
                 touched = false,
                 WIDTH = window.innerWidth,
                 HEIGHT = window.innerHeight;
@@ -106,10 +107,76 @@
             
             entities.push(colourChangeBTN);
             
+            var spawnPoints = [
+                {x : 0, y : 0},
+                {x : (WIDTH - 64), y : 0},
+                {x : 0, y : (HEIGHT - 64)},
+                {x : (WIDTH - 64), y : (HEIGHT - 64)}
+            ];
+            
+            var Enemy = function(x, y, w, h){
+                this.x = x;
+                this.y = y;
+                this.width = w;
+                this.height = h;
+                this.isActive = false;
+                this.state;
+                this.colour;
+                
+                this.render = function(context){
+                    if(this.state === 'pink'){
+                        this.colour = '#FF19C1';
+                    }
+                    
+                    if(this.state === 'purple'){
+                        this.colour = '#7219FF';
+                    }
+                    
+                    context.fillStyle = this.colour;
+                    context.fillRect(this.x, this.y, this.width, this.height);
+                };
+                
+                this.update = function(){
+                    if(this.x < player.x){
+                        this.x += 1;
+                    }
+                    else if(this.x > player.x){
+                        this.x -= 1;
+                    };
+                    
+                    if(this.y < player.y){
+                        this.y += 1;
+                    }
+                    
+                    else if(this.y > player.y){
+                        this.y -= 1;
+                    };
+                }
+            };
+            
             canvas.width = WIDTH;
             canvas.height = HEIGHT;
             
             canvas.addEventListener('touchstart', touchHandler, false);
+            
+            function randNum(upperBound){
+                return Math.floor(Math.random() * upperBound);
+            };
+            
+            function isColliding(shapeA, shapeB){
+                circleDistX = Math.abs(shapeA.x - shapeB.x)
+                circleDistY = Math.abs(shapeA.y - shapeB.y)
+                
+                if(circleDistX > (shapeB.width/2 + shapeA.size)){return false;}
+                if(circleDistY > (shapeB.height/2 + shapeA.size)){return false;}
+                
+                if(circleDistX <= (shapeB.width/2)){return true;}
+                if(circleDistY <= (shapeB.height/2)){return true;}
+                
+                cornerDistance_sq = Math.pow((circleDistX - shapeB/2), 2) + Math.pow((circleDistY -shapeB.height/2), 2);
+                
+                return(cornerDistance_sq <= Math.pow(shapeA.size, 2));
+            };
             
             function touchHandler(event){
                 touchX = event.targetTouches[0].clientX;
@@ -128,36 +195,81 @@
                       colourChangeBTN.state = 'purple';
                     };
                 }
+                
+                else{
 
-                b = new Bullet()
-                directionX = (touchX - player.x);
-                directionY = (touchY - player.y);
+                    b = new Bullet()
+                    directionX = (touchX - player.x);
+                    directionY = (touchY - player.y);
 
-                angle = Math.atan2(directionY, directionX);
-                b.velX = Math.cos(angle) * 20;
-                b.velY = Math.sin(angle) * 20;
-
-                entities.push(b);
+                    angle = Math.atan2(directionY, directionX);
+                    b.velX = Math.cos(angle) * 20;
+                    b.velY = Math.sin(angle) * 20;
+                    
+                    player.bullets.push(b);
+                    entities.push(b);
+                };
             };
 
             function render(){
                 ctx.clearRect(0, 0, WIDTH, HEIGHT);
                 
-                ctx.fillStyle = '#FFDE19';
+                if(colourChangeBTN.state === 'purple'){
+                    ctx.fillStyle = '#FFDE19';
+                }
+                
+                else if(colourChangeBTN.state === 'pink'){
+                    ctx.fillStyle = '#19FF84';
+                };
+                
                 ctx.fillRect(0, 0, WIDTH, HEIGHT);
                 
+                ctx.fillStyle = '#000000';
+                for(var i = 0; i < spawnPoints.length; i++){
+                  ctx.fillRect(spawnPoints[i].x, spawnPoints[i].y, 64, 64);  
+                };
+                
                 for(var i = 0; i < entities.length; i++){
-                    if(entities[i]){
+                    if(entities[i].isActive){
                         entities[i].render(ctx);
                     }
                 };
             };
             
             function update(){
+                shouldSpawn = randNum(1000);
+                
+                if(shouldSpawn > 990){
+                    colour = randNum(2);
+                    spawnPointNum = randNum(4);
+                    colourList = ['pink', 'purple'];
+                    
+                    newEnemy = new Enemy(spawnPoints[spawnPointNum].x, spawnPoints[spawnPointNum].y, 64, 64);
+                    newEnemy.state = colourList[colour];
+                    newEnemy.isActive = true;
+                    
+                    enemyList.push(newEnemy);
+                    entities.push(newEnemy);
+                    
+                }
+                
                 for(var i = 0; i < entities.length; i++){
                     if(entities[i].isActive){
                         entities[i].update();
                     }
+                };
+                
+                for(var i = 0; i < player.bullets.length; i++){
+                    for(var j = 0; j < enemyList.length; j++){
+                        if(isColliding(player.bullets[i], enemyList[j])){
+                            if(player.bullets[i].isActive && enemyList[j].isActive){
+                                if(player.bullets[i].colour === enemyList[j].colour){
+                                    player.bullets[i].isActive = false;
+                                    enemyList[j].isActive = false;
+                                };
+                            };
+                        };
+                    };
                 };
                 
             };
