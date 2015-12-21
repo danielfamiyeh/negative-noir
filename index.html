@@ -7,6 +7,11 @@
             border : 1px solid #000;
             width : 100%;
             height : 100%;
+        }
+        
+        @font-face{
+            font-family : 'pressstart2p';
+            src: url('PressStart2P.ttf');
         };
         
     </style></head>
@@ -23,6 +28,7 @@
                 entities = [],
                 enemyList = [],
                 touched = false,
+                gameState = 'start',
                 WIDTH = window.innerWidth,
                 HEIGHT = window.innerHeight;
             
@@ -56,6 +62,7 @@
                 bullets : [],
                 colour : '#7219FF',
                 isActive : true,
+                rect : {x : ((WIDTH / 2) - 64), y : ((HEIGHT / 2) - 64), width : 128, height: 128},
                 
                 render : function(context){
                     context.fillStyle = this.colour;
@@ -122,6 +129,7 @@
                 this.isActive = false;
                 this.state;
                 this.colour;
+                this.spawnPoint;
                 
                 this.render = function(context){
                     if(this.state === 'pink'){
@@ -137,27 +145,46 @@
                 };
                 
                 this.update = function(){
-                    if(this.x < player.x){
-                        this.x += 1;
-                    }
-                    else if(this.x > player.x){
-                        this.x -= 1;
-                    };
-                    
-                    if(this.y < player.y){
-                        this.y += 1;
+                    if(this.spawnPoint === 0){
+                        if(this.x < player.x - 64){
+                            this.x += 1;
+                        }
+                        if(this.y < player.y - 64){
+                            this.y += 1;
+                        }
                     }
                     
-                    else if(this.y > player.y){
-                        this.y -= 1;
+                    if(this.spawnPoint === 1){
+                        if(this.x > player.x){
+                            this.x -= 1  
+                        }
+                        if(this.y < player.y - 64){
+                            this.y += 1
+                        };
+                    }
+                    
+                    if(this.spawnPoint === 2){
+                        if(this.x < player.x - 64){
+                            this.x += 1;
+                        }
+                        if(this.y > player.y){
+                            this.y -= 1;  
+                        };
+                    }
+                    
+                    if(this.spawnPoint === 3){
+                        if(this.x > player.x){
+                            this.x -= 1;
+                        }
+                        if(this.y > player.y){
+                            this.y -= 1;
+                        }
                     };
                 }
             };
             
             canvas.width = WIDTH;
             canvas.height = HEIGHT;
-            
-            canvas.addEventListener('touchstart', touchHandler, false);
             
             function randNum(upperBound){
                 return Math.floor(Math.random() * upperBound);
@@ -178,100 +205,144 @@
                 return(cornerDistance_sq <= Math.pow(shapeA.size, 2));
             };
             
+            function AABBCollision(shapeA, shapeB){
+                if(shapeA.x + shapeA.width > shapeB.x &&
+                  shapeA.x < shapeB.x + shapeB.width &&
+                  shapeA.y + shapeA.height > shapeB.y &&
+                  shapeA.y < shapeB.y + shapeB.height){
+                    return true;
+                }
+            };
+            
+            canvas.addEventListener('touchstart', touchHandler, false);
+            
             function touchHandler(event){
                 touchX = event.targetTouches[0].clientX;
                 touchY = event.targetTouches[0].clientY;
                 
-                if(touchX > colourChangeBTN.x &&
-                  touchX < (colourChangeBTN.x + colourChangeBTN.width) &&
-                  touchY > colourChangeBTN.y &&
-                  touchY < colourChangeBTN.y + colourChangeBTN.height){
-                    console.log('clicked');
-                    if(colourChangeBTN.state === 'purple'){
-                        colourChangeBTN.state = 'pink';
+                if(gameState === 'start'){
+                    if(touchX > ((WIDTH / 2) - 238) &&
+                      touchX < ((WIDTH / 2) + 238) &&
+                      touchY > ((HEIGHT / 2) - 64) &&
+                      touchY < ((HEIGHT / 2) + 64)){
+                        gameState = 'play';
                     }
-                    
-                    else if(colourChangeBTN.state === 'pink'){
-                      colourChangeBTN.state = 'purple';
-                    };
                 }
                 
-                else{
+                else if(gameState === 'play'){
+                    if(touchX > colourChangeBTN.x &&
+                      touchX < (colourChangeBTN.x + colourChangeBTN.width) &&
+                      touchY > colourChangeBTN.y &&
+                      touchY < colourChangeBTN.y + colourChangeBTN.height){
+                        console.log('clicked');
+                        if(colourChangeBTN.state === 'purple'){
+                            colourChangeBTN.state = 'pink';
+                        }
 
-                    b = new Bullet()
-                    directionX = (touchX - player.x);
-                    directionY = (touchY - player.y);
+                        else if(colourChangeBTN.state === 'pink'){
+                          colourChangeBTN.state = 'purple';
+                        };
+                    }
 
-                    angle = Math.atan2(directionY, directionX);
-                    b.velX = Math.cos(angle) * 20;
-                    b.velY = Math.sin(angle) * 20;
-                    
-                    player.bullets.push(b);
-                    entities.push(b);
-                };
+                    else{
+
+                        b = new Bullet()
+                        directionX = (touchX - player.x);
+                        directionY = (touchY - player.y);
+
+                        angle = Math.atan2(directionY, directionX);
+                        b.velX = Math.cos(angle) * 35;
+                        b.velY = Math.sin(angle) * 35;
+
+                        player.bullets.push(b);
+                        entities.push(b);
+                    };
+                }
             };
 
             function render(){
                 ctx.clearRect(0, 0, WIDTH, HEIGHT);
                 
-                if(colourChangeBTN.state === 'purple'){
+                if(gameState === 'start'){
                     ctx.fillStyle = '#FFDE19';
+                    ctx.fillRect(0, 0, WIDTH, HEIGHT)
+                    
+                    ctx.font = '128px pressstart2p';
+                    ctx.fillStyle = '#7219FF'
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('PLAY', (WIDTH / 2), ((HEIGHT / 2)));
                 }
                 
-                else if(colourChangeBTN.state === 'pink'){
-                    ctx.fillStyle = '#19FF84';
-                };
+                if(gameState === 'play'){
                 
-                ctx.fillRect(0, 0, WIDTH, HEIGHT);
-                
-                ctx.fillStyle = '#000000';
-                for(var i = 0; i < spawnPoints.length; i++){
-                  ctx.fillRect(spawnPoints[i].x, spawnPoints[i].y, 64, 64);  
-                };
-                
-                for(var i = 0; i < entities.length; i++){
-                    if(entities[i].isActive){
-                        entities[i].render(ctx);
+                    if(colourChangeBTN.state === 'purple'){
+                        ctx.fillStyle = '#FFDE19';
                     }
-                };
+
+                    else if(colourChangeBTN.state === 'pink'){
+                        ctx.fillStyle = '#19FF84';
+                    };
+
+                    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+                    ctx.fillStyle = '#000000';
+                    for(var i = 0; i < spawnPoints.length; i++){
+                      ctx.fillRect(spawnPoints[i].x, spawnPoints[i].y, 64, 64);  
+                    };
+
+                    for(var i = 0; i < entities.length; i++){
+                        if(entities[i].isActive){
+                            entities[i].render(ctx);
+                        }
+                    };
+                }
             };
             
             function update(){
-                shouldSpawn = randNum(1000);
-                
-                if(shouldSpawn > 990){
-                    colour = randNum(2);
-                    spawnPointNum = randNum(4);
-                    colourList = ['pink', 'purple'];
-                    
-                    newEnemy = new Enemy(spawnPoints[spawnPointNum].x, spawnPoints[spawnPointNum].y, 64, 64);
-                    newEnemy.state = colourList[colour];
-                    newEnemy.isActive = true;
-                    
-                    enemyList.push(newEnemy);
-                    entities.push(newEnemy);
-                    
-                }
-                
-                for(var i = 0; i < entities.length; i++){
-                    if(entities[i].isActive){
-                        entities[i].update();
+                if(gameState === 'play'){
+                    shouldSpawn = randNum(1000);
+
+                    if(shouldSpawn > 990){
+                        colour = randNum(2);
+                        spawnPointNum = randNum(4);
+                        colourList = ['pink', 'purple'];
+
+                        newEnemy = new Enemy(spawnPoints[spawnPointNum].x, spawnPoints[spawnPointNum].y, 64, 64);
+                        newEnemy.state = colourList[colour];
+                        newEnemy.isActive = true;
+                        newEnemy.spawnPoint = spawnPointNum;
+
+                        enemyList.push(newEnemy);
+                        entities.push(newEnemy);
+
                     }
-                };
-                
-                for(var i = 0; i < player.bullets.length; i++){
-                    for(var j = 0; j < enemyList.length; j++){
-                        if(isColliding(player.bullets[i], enemyList[j])){
-                            if(player.bullets[i].isActive && enemyList[j].isActive){
-                                if(player.bullets[i].colour === enemyList[j].colour){
-                                    player.bullets[i].isActive = false;
-                                    enemyList[j].isActive = false;
+
+                    for(var i = 0; i < entities.length; i++){
+                        if(entities[i].isActive){
+                            entities[i].update();
+                        }
+                    };
+
+                    for(var i = 0; i < player.bullets.length; i++){
+                        for(var j = 0; j < enemyList.length; j++){
+                            if(isColliding(player.bullets[i], enemyList[j])){
+                                if(player.bullets[i].isActive && enemyList[j].isActive){
+                                    if(player.bullets[i].colour === enemyList[j].colour){
+                                        player.bullets[i].isActive = false;
+                                        enemyList[j].isActive = false;
+                                    };
                                 };
                             };
                         };
                     };
-                };
-                
+
+                    for(var i = 0; i < enemyList.length; i++){
+                        if(AABBCollision(player.rect, enemyList[i])){
+                            gameState = 'dead';
+                        };
+                    };
+                }
             };
             
             var fps = 60,
