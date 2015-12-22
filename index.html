@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <!-- saved from url=(0067)file:///C:/Users/kwaku/Desktop/kw4ks.com/games/ldshooter/index.html -->
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
-            <meta name="viewport" content="user-scalable=no">
+            <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=0.325">
     <style>
         #canvas{
             border : 1px solid #000;
             width : 100%;
             height : 100%;
         }
-        
-        @font-face{
-            font-family : 'pressstart2p';
-            src: url('PressStart2P.ttf');
+
+        @font-face {
+            font-family: 'Lato';
+            src: url('lato.ttf');
         };
+        
         
     </style></head>
     
@@ -29,17 +30,20 @@
                 enemyList = [],
                 touched = false,
                 gameState = 'start',
+                score = 0,
+                highScore = localStorage.getItem('highScore') || 0,
                 WIDTH = window.innerWidth,
                 HEIGHT = window.innerHeight;
             
             var Bullet = function(){
                 this.x = player.x;
                 this.y = player.y;
-                this.size = 32;
+                this.size = (WIDTH / 41);
                 this.colour = player.colour;
                 this.velX = 0;
                 this.velY = 0;
                 this.isActive = true;
+                this.rect = {x : (this.x - (WIDTH / 41)), y : (this.y - (WIDTH / 41)), width : (this.size * 2), height : (this.size * 2)};
                 
                 this.render = function(context){
                     context.fillStyle = this.colour;
@@ -52,33 +56,35 @@
                 this.update = function(){
                     this.x += this.velX;
                     this.y += this.velY;
+                    this.rect = {x : (this.x - (WIDTH / 41)), y : (this.y - (WIDTH / 41)), width : (this.size * 2), height : (this.size * 2)};
                 };
             };
             
             var player = {
                 x : (WIDTH / 2),
                 y : (HEIGHT / 2),
-                size : 64,
+                size : ((WIDTH / 2) / 7.6875),
                 bullets : [],
-                colour : '#7219FF',
+                colour : '#000000',
                 isActive : true,
-                rect : {x : ((WIDTH / 2) - 64), y : ((HEIGHT / 2) - 64), width : 128, height: 128},
+                rect : {x : ((WIDTH / 2) - ((WIDTH / 2) / 7.6875)), y : ((HEIGHT / 2) - ((WIDTH / 2) / 7.6875)), width : ((WIDTH / 2) / 3.84375), height: ((WIDTH / 2) / 3.84375)},
                 
                 render : function(context){
-                    context.fillStyle = this.colour;
+                    context.strokeStyle = this.colour;
                     
                     context.beginPath();
                     context.arc(this.x,this.y,this.size,0,2*Math.PI);
-                    context.fill();
+                    ctx.lineWidth = ((WIDTH * HEIGHT) / 491156.571);
+                    context.stroke();
                 },
                 
                 update : function(){
-                    if(colourChangeBTN.state === 'purple'){
-                        this.colour = '#7219FF';
+                    if(colourChangeBTN.state === 'black'){
+                        this.colour = '#000000';
                     }
                     
-                    else if(colourChangeBTN.state === 'pink'){
-                        this.colour = '#FF19C1';
+                    else if(colourChangeBTN.state === 'white'){
+                        this.colour = '#ffffff';
                     }
                     
                 }
@@ -87,12 +93,12 @@
             entities.push(player);
             
             var colourChangeBTN = {
-                x : ((WIDTH / 2) - 96),
-                y : (HEIGHT - 128),
-                width : 192,
-                height : 128,
-                state : 'purple',
-                colour : '#7219FF',
+                x : ((WIDTH / 2) - ((WIDTH / 2) / 5.125)),
+                y : (HEIGHT - (WIDTH / 5.125)),
+                width : (WIDTH / 5.125),
+                height : (WIDTH / 5.125),
+                state : 'black',
+                colour : '#000000',
                 isActive : true,
                 
                 render : function(context){
@@ -101,13 +107,13 @@
                 },
                 
                 update : function(){
-                    if(this.state === 'purple'){
-                        this.colour = '#7219FF';
+                    if(this.state === 'black'){
+                        this.colour = '#000000';
                 
                     }
                     
-                    else if(this.state === 'pink'){
-                        this.colour = '#FF19C1';
+                    else if(this.state === 'white'){
+                        this.colour = '#ffffff';
                     };
                 }
             };
@@ -116,9 +122,9 @@
             
             var spawnPoints = [
                 {x : 0, y : 0},
-                {x : (WIDTH - 64), y : 0},
-                {x : 0, y : (HEIGHT - 64)},
-                {x : (WIDTH - 64), y : (HEIGHT - 64)}
+                {x : (WIDTH - (WIDTH / 15.375)), y : 0},
+                {x : 0, y : (HEIGHT - (WIDTH / 15.125))},
+                {x : (WIDTH - (WIDTH / 15.125)), y : (HEIGHT - (WIDTH / 15.125))}
             ];
             
             var Enemy = function(x, y, w, h){
@@ -132,52 +138,53 @@
                 this.spawnPoint;
                 
                 this.render = function(context){
-                    if(this.state === 'pink'){
-                        this.colour = '#FF19C1';
+                    if(this.state === 'white'){
+                        this.colour = '#ffffff';
                     }
                     
-                    if(this.state === 'purple'){
-                        this.colour = '#7219FF';
+                    if(this.state === 'black'){
+                        this.colour = '#000000';
                     }
                     
-                    context.fillStyle = this.colour;
-                    context.fillRect(this.x, this.y, this.width, this.height);
+                    context.strokeStyle = this.colour;
+                    context.lineWidth = ((WIDTH * HEIGHT) / 491156.571);
+                    context.strokeRect(this.x, this.y, this.width, this.height);
                 };
                 
                 this.update = function(){
                     if(this.spawnPoint === 0){
-                        if(this.x < player.x - 64){
-                            this.x += 1;
+                        if(this.x < player.x - (WIDTH / 15.125)){
+                            this.x += ((WIDTH * HEIGHT) / 491156.571);
                         }
-                        if(this.y < player.y - 64){
-                            this.y += 1;
+                        if(this.y < player.y - (WIDTH / 15.125)){
+                            this.y += 3.5;
                         }
                     }
                     
                     if(this.spawnPoint === 1){
                         if(this.x > player.x){
-                            this.x -= 1  
+                            this.x -= ((WIDTH * HEIGHT) / 491156.571);
                         }
-                        if(this.y < player.y - 64){
-                            this.y += 1
+                        if(this.y < player.y - (WIDTH / 15.125)){
+                            this.y += ((WIDTH * HEIGHT) / 491156.571);
                         };
                     }
                     
                     if(this.spawnPoint === 2){
-                        if(this.x < player.x - 64){
-                            this.x += 1;
+                        if(this.x < player.x - (WIDTH / 15.125)){
+                            this.x += ((WIDTH * HEIGHT) / 491156.571);
                         }
                         if(this.y > player.y){
-                            this.y -= 1;  
+                            this.y -= ((WIDTH * HEIGHT) / 491156.571);  
                         };
                     }
                     
                     if(this.spawnPoint === 3){
                         if(this.x > player.x){
-                            this.x -= 1;
+                            this.x -= ((WIDTH * HEIGHT) / 491156.571);
                         }
                         if(this.y > player.y){
-                            this.y -= 1;
+                            this.y -= ((WIDTH * HEIGHT) / 491156.571);
                         }
                     };
                 }
@@ -185,24 +192,12 @@
             
             canvas.width = WIDTH;
             canvas.height = HEIGHT;
+
+            console.log(WIDTH);
+            console.log(HEIGHT);
             
             function randNum(upperBound){
                 return Math.floor(Math.random() * upperBound);
-            };
-            
-            function isColliding(shapeA, shapeB){
-                circleDistX = Math.abs(shapeA.x - shapeB.x)
-                circleDistY = Math.abs(shapeA.y - shapeB.y)
-                
-                if(circleDistX > (shapeB.width/2 + shapeA.size)){return false;}
-                if(circleDistY > (shapeB.height/2 + shapeA.size)){return false;}
-                
-                if(circleDistX <= (shapeB.width/2)){return true;}
-                if(circleDistY <= (shapeB.height/2)){return true;}
-                
-                cornerDistance_sq = Math.pow((circleDistX - shapeB/2), 2) + Math.pow((circleDistY -shapeB.height/2), 2);
-                
-                return(cornerDistance_sq <= Math.pow(shapeA.size, 2));
             };
             
             function AABBCollision(shapeA, shapeB){
@@ -221,10 +216,10 @@
                 touchY = event.targetTouches[0].clientY;
                 
                 if(gameState === 'start'){
-                    if(touchX > ((WIDTH / 2) - 238) &&
-                      touchX < ((WIDTH / 2) + 238) &&
-                      touchY > ((HEIGHT / 2) - 64) &&
-                      touchY < ((HEIGHT / 2) + 64)){
+                    if(touchX > ((WIDTH / 2) - ((WIDTH / 2) / 3.06722689)) &&
+                      touchX < ((WIDTH / 2) + ((WIDTH / 2) / 3.06722689)) &&
+                      touchY > ((HEIGHT / 2) - ((WIDTH / 2) / 2.5625)) &&
+                      touchY < ((HEIGHT / 2) - ((WIDTH / 2) / 7.6875))){
                         gameState = 'play';
                     }
                 }
@@ -234,13 +229,12 @@
                       touchX < (colourChangeBTN.x + colourChangeBTN.width) &&
                       touchY > colourChangeBTN.y &&
                       touchY < colourChangeBTN.y + colourChangeBTN.height){
-                        console.log('clicked');
-                        if(colourChangeBTN.state === 'purple'){
-                            colourChangeBTN.state = 'pink';
+                        if(colourChangeBTN.state === 'black'){
+                            colourChangeBTN.state = 'white';
                         }
 
-                        else if(colourChangeBTN.state === 'pink'){
-                          colourChangeBTN.state = 'purple';
+                        else if(colourChangeBTN.state === 'white'){
+                          colourChangeBTN.state = 'black';
                         };
                     }
 
@@ -251,8 +245,8 @@
                         directionY = (touchY - player.y);
 
                         angle = Math.atan2(directionY, directionX);
-                        b.velX = Math.cos(angle) * 35;
-                        b.velY = Math.sin(angle) * 35;
+                        b.velX = Math.cos(angle) * ((WIDTH * HEIGHT) / 49115.6571);
+                        b.velY = Math.sin(angle) * ((WIDTH * HEIGHT) / 49115.6571);
 
                         player.bullets.push(b);
                         entities.push(b);
@@ -262,53 +256,68 @@
 
             function render(){
                 ctx.clearRect(0, 0, WIDTH, HEIGHT);
+                ctx.fillStyle = '#c6cccc';
+                ctx.fillRect(0, 0, WIDTH, HEIGHT)
                 
-                if(gameState === 'start'){
-                    ctx.fillStyle = '#FFDE19';
-                    ctx.fillRect(0, 0, WIDTH, HEIGHT)
-                    
-                    ctx.font = '128px pressstart2p';
-                    ctx.fillStyle = '#7219FF'
+                if(gameState === 'start'){   
+                    ctx.font = '128px lato';
+                    ctx.fillStyle = '#000000'
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.fillText('PLAY', (WIDTH / 2), ((HEIGHT / 2)));
+                    ctx.fillText('PLAY', (WIDTH / 2), ((HEIGHT / 2) - ((HEIGHT / 2)/ 6.82421875)));
+                    ctx.fillText('HELP', (WIDTH / 2), ((HEIGHT / 2) + ((HEIGHT / 2)/ 6.82421875)));
+
+                    ctx.font = '160px lato';
+                    ctx.fillText('POLA', ((WIDTH / 2) - ((WIDTH / 2) / 3.075)), ((WIDTH / 2) / 1.375));
+
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillText('RITY', ((WIDTH / 2) + ((WIDTH / 2) / 2.34285714)), ((WIDTH / 2) / 1.375));
                 }
                 
                 if(gameState === 'play'){
-                
-                    if(colourChangeBTN.state === 'purple'){
-                        ctx.fillStyle = '#FFDE19';
-                    }
-
-                    else if(colourChangeBTN.state === 'pink'){
-                        ctx.fillStyle = '#19FF84';
-                    };
 
                     ctx.fillRect(0, 0, WIDTH, HEIGHT);
-
-                    ctx.fillStyle = '#000000';
-                    for(var i = 0; i < spawnPoints.length; i++){
-                      ctx.fillRect(spawnPoints[i].x, spawnPoints[i].y, 64, 64);  
-                    };
 
                     for(var i = 0; i < entities.length; i++){
                         if(entities[i].isActive){
                             entities[i].render(ctx);
                         }
                     };
+
+                    ctx.fillStyle = (score % 2 === 0) ? '#000000' : '#FFFFFF';
+
+                    ctx.fillText(score, (WIDTH / 2), ((WIDTH / 4) / 3.075));
                 }
+
+                if(gameState === 'dead'){
+                    ctx.font = '128px lato'
+                    ctx.fillStyle = 'black';
+                    ctx.fillText('You got ' + score + '.', (WIDTH / 2), (WIDTH / 3.075));
+
+                    if(score > highScore){
+                        ctx.fillText('Congratulations!', (WIDTH / 2), ((HEIGHT / 2) - ((WIDTH / 8) / 3.075)));
+                        ctx.font = '90px lato'
+                        ctx.fillText('You beat your high score.', (WIDTH / 2), ((HEIGHT / 2) + ((WIDTH / 8) / 2.075)));
+                        localStorage.setItem('highScore', score);
+                    }
+
+                    ctx.fillText('Your high score is ' + highScore + '.', (WIDTH / 2), ((WIDTH / 2) / 3.075));
+
+                    ctx.font = '160px lato';
+                    ctx.fillText('PLAY AGAIN', (WIDTH / 2), ((HEIGHT / 2) + ((HEIGHT / 2) / 2.09975962)));
+                };
             };
             
             function update(){
                 if(gameState === 'play'){
                     shouldSpawn = randNum(1000);
 
-                    if(shouldSpawn > 990){
+                    if(shouldSpawn > 980){
                         colour = randNum(2);
                         spawnPointNum = randNum(4);
-                        colourList = ['pink', 'purple'];
+                        colourList = ['white', 'black'];
 
-                        newEnemy = new Enemy(spawnPoints[spawnPointNum].x, spawnPoints[spawnPointNum].y, 64, 64);
+                        newEnemy = new Enemy(spawnPoints[spawnPointNum].x, spawnPoints[spawnPointNum].y, (WIDTH / 15.375), (WIDTH / 15.375));
                         newEnemy.state = colourList[colour];
                         newEnemy.isActive = true;
                         newEnemy.spawnPoint = spawnPointNum;
@@ -326,11 +335,12 @@
 
                     for(var i = 0; i < player.bullets.length; i++){
                         for(var j = 0; j < enemyList.length; j++){
-                            if(isColliding(player.bullets[i], enemyList[j])){
+                            if(AABBCollision(player.bullets[i].rect, enemyList[j])){
                                 if(player.bullets[i].isActive && enemyList[j].isActive){
                                     if(player.bullets[i].colour === enemyList[j].colour){
                                         player.bullets[i].isActive = false;
                                         enemyList[j].isActive = false;
+                                        score += 1;
                                     };
                                 };
                             };
@@ -344,23 +354,9 @@
                     };
                 }
             };
-            
-            var fps = 60,
-                interval = 1000 / 60,
-                then = Date.now(),
-                now,
-                delta;
-            
+                   
             function main(){
-                now = Date.now();
-                delta = now - then;
-                
-                if(delta > interval){
-                    render();
-                    
-                    then = now - (delta % interval);
-                };
-                
+                render();
                 update();
                 window.requestAnimationFrame(main);
             };
