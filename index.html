@@ -30,6 +30,7 @@
                 enemyList = [],
                 touched = false,
                 gameState = 'start',
+                started = false
                 score = 0,
                 highScore = localStorage.getItem('highScore') || 0,
                 WIDTH = window.innerWidth,
@@ -66,25 +67,32 @@
                 size : ((WIDTH / 2) / 7.6875),
                 bullets : [],
                 colour : '#000000',
+                rgbCol : '0,0,0,',
+                alpha : '0.5',
                 isActive : true,
                 rect : {x : ((WIDTH / 2) - ((WIDTH / 2) / 7.6875)), y : ((HEIGHT / 2) - ((WIDTH / 2) / 7.6875)), width : ((WIDTH / 2) / 3.84375), height: ((WIDTH / 2) / 3.84375)},
                 
                 render : function(context){
-                    context.strokeStyle = this.colour;
+                    context.fillStyle = 'rgba(' + this.rgbCol + this.alpha + ')';
+                    context.beginPath();
+                    context.arc(this.x,this.y,(this.size / 2),0,2*Math.PI);
+                    context.fill();
                     
+                    context.fillStyle = 'rgba(' + this.rgbCol + this.alpha + ')';
                     context.beginPath();
                     context.arc(this.x,this.y,this.size,0,2*Math.PI);
-                    ctx.lineWidth = ((WIDTH * HEIGHT) / 491156.571);
-                    context.stroke();
+                    context.fill();
                 },
                 
                 update : function(){
                     if(colourChangeBTN.state === 'black'){
                         this.colour = '#000000';
+                        this.rgbCol = '0,0,0,';
                     }
                     
                     else if(colourChangeBTN.state === 'white'){
                         this.colour = '#ffffff';
+                        this.rgbCol = '255,255,255,';
                     }
                     
                 }
@@ -99,21 +107,25 @@
                 height : (WIDTH / 5.125),
                 state : 'black',
                 colour : '#000000',
+                rgbCol : '0,0,0',
+                alpha : 0.7,
                 isActive : true,
                 
                 render : function(context){
-                    context.fillStyle = this.colour;
+                    context.fillStyle = 'rgba(' + this.rgbCol + this.alpha + ')';
                     context.fillRect(this.x, this.y, this.width, this.height);
                 },
                 
                 update : function(){
                     if(this.state === 'black'){
                         this.colour = '#000000';
+                        this.rgbCol = 'rgba(' + this.rgbCol + this.alpha + ')';
                 
                     }
                     
                     else if(this.state === 'white'){
                         this.colour = '#ffffff';
+                        this.rgbCol = 'rgba(' + this.rgbCol + this.alpha + ')';
                     };
                 }
             };
@@ -135,20 +147,24 @@
                 this.isActive = false;
                 this.state;
                 this.colour;
+                this.rgbCol;
+                this.alpha = 0.7;
                 this.spawnPoint;
                 
                 this.render = function(context){
                     if(this.state === 'white'){
                         this.colour = '#ffffff';
+                        this.rgbCol = '255,255,255,';
                     }
                     
                     if(this.state === 'black'){
                         this.colour = '#000000';
+                        this.rgbCol = '0,0,0,';
                     }
                     
-                    context.strokeStyle = this.colour;
-                    context.lineWidth = ((WIDTH * HEIGHT) / 491156.571);
-                    context.strokeRect(this.x, this.y, this.width, this.height);
+                    context.fillStyle = 'rgba(' + this.rgbCol + this.alpha + ')';
+                    //context.lineWidth = ((WIDTH * HEIGHT) / 491156.571);
+                    context.fillRect(this.x, this.y, this.width, this.height);
                 };
                 
                 this.update = function(){
@@ -157,7 +173,7 @@
                             this.x += ((WIDTH * HEIGHT) / 491156.571);
                         }
                         if(this.y < player.y - (WIDTH / 15.125)){
-                            this.y += 3.5;
+                            this.y += 3;
                         }
                     }
                     
@@ -244,24 +260,38 @@
                         directionX = (touchX - player.x);
                         directionY = (touchY - player.y);
 
-                        angle = Math.atan2(directionY, directionX);
-                        b.velX = Math.cos(angle) * ((WIDTH * HEIGHT) / 49115.6571);
-                        b.velY = Math.sin(angle) * ((WIDTH * HEIGHT) / 49115.6571);
+                        magnitude = Math.sqrt(directionY * directionY + directionX * directionX);
+
+
+                        b.velX = (directionX / magnitude) * ((WIDTH * HEIGHT) / 49115.6571);
+                        b.velY = (directionY / magnitude) * ((WIDTH * HEIGHT) / 49115.6571);
 
                         player.bullets.push(b);
                         entities.push(b);
                     };
                 }
+
+                else if(gameState === 'dead'){
+                    if(touchX > (WIDTH / 18.9230769231) &&
+                        touchX < (WIDTH / 1.05579399142) &&
+                        touchY > (HEIGHT / 1.43196721311) &&
+                        touchY < (HEIGHT / 1.29695619896)){
+                        gameState = 'play';
+                        score = 0;
+                    };
+                };
             };
 
             function render(){
                 ctx.clearRect(0, 0, WIDTH, HEIGHT);
-                ctx.fillStyle = '#c6cccc';
+                ctx.fillStyle = '#bbbbbb';
                 ctx.fillRect(0, 0, WIDTH, HEIGHT)
                 
-                if(gameState === 'start'){   
+                if(gameState === 'start'){ 
+
+                    startAplha = 1;  
                     ctx.font = '128px lato';
-                    ctx.fillStyle = '#000000'
+                    ctx.fillStyle = '#000000';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.fillText('PLAY', (WIDTH / 2), ((HEIGHT / 2) - ((HEIGHT / 2)/ 6.82421875)));
@@ -282,8 +312,7 @@
                         if(entities[i].isActive){
                             entities[i].render(ctx);
                         }
-                    };
-
+                    };                    
                     ctx.fillStyle = (score % 2 === 0) ? '#000000' : '#FFFFFF';
 
                     ctx.fillText(score, (WIDTH / 2), ((WIDTH / 4) / 3.075));
@@ -301,6 +330,7 @@
                         localStorage.setItem('highScore', score);
                     }
 
+                    ctx.font = '100px lato'
                     ctx.fillText('Your high score is ' + highScore + '.', (WIDTH / 2), ((WIDTH / 2) / 3.075));
 
                     ctx.font = '160px lato';
@@ -317,15 +347,23 @@
                         spawnPointNum = randNum(4);
                         colourList = ['white', 'black'];
 
-                        newEnemy = new Enemy(spawnPoints[spawnPointNum].x, spawnPoints[spawnPointNum].y, (WIDTH / 15.375), (WIDTH / 15.375));
-                        newEnemy.state = colourList[colour];
-                        newEnemy.isActive = true;
-                        newEnemy.spawnPoint = spawnPointNum;
+                        if(enemyList.length < 16){
+                            newEnemy = new Enemy(spawnPoints[spawnPointNum].x, spawnPoints[spawnPointNum].y, (WIDTH / 15.375), (WIDTH / 15.375));
+                            newEnemy.state = colourList[colour];
+                            newEnemy.isActive = true;
+                            newEnemy.spawnPoint = spawnPointNum;
 
-                        enemyList.push(newEnemy);
-                        entities.push(newEnemy);
+                            enemyList.push(newEnemy);
+                            entities.push(newEnemy);
+                        }
+                    };
 
-                    }
+                    for(var i = enemyList.length - 1; i >= 0 ; i--){
+                        if(enemyList[i].isActive === false){
+
+                            enemyList.splice(i, 1);
+                        };
+                    };
 
                     for(var i = 0; i < entities.length; i++){
                         if(entities[i].isActive){
@@ -335,15 +373,18 @@
 
                     for(var i = 0; i < player.bullets.length; i++){
                         for(var j = 0; j < enemyList.length; j++){
-                            if(AABBCollision(player.bullets[i].rect, enemyList[j])){
-                                if(player.bullets[i].isActive && enemyList[j].isActive){
-                                    if(player.bullets[i].colour === enemyList[j].colour){
-                                        player.bullets[i].isActive = false;
-                                        enemyList[j].isActive = false;
-                                        score += 1;
+                            if(enemyList[j].isActive){
+                                if(AABBCollision(player.bullets[i].rect, enemyList[j])){
+                                    if(player.bullets[i].isActive && enemyList[j].isActive){
+                                        if(player.bullets[i].colour === enemyList[j].colour){
+                                            player.bullets[i].isActive = false;
+                                            enemyList[j].isActive = false;
+                                            console.log(enemyList[j].isActive);
+                                            score += 1;
+                                        };
                                     };
                                 };
-                            };
+                            }
                         };
                     };
 
@@ -352,20 +393,43 @@
                             gameState = 'dead';
                         };
                     };
+
+                    if(gameState === 'dead'){
+                        for(var i = 0; i < enemyList.length; i++){
+                            enemyList[i].isActive = false;
+                        }
+                        enemyList.splice(0,enemyList.length);
+                        player.bullets.splice(0, player.bullets.length);
+                    };
                 }
             };
+
+            var fps = 30;
+            var now;
+            var then = Date.now();
+            var interval = 1000/fps;
+            var delta;
                    
             function main(){
-                render();
-                update();
                 window.requestAnimationFrame(main);
+
+                now = Date.now();
+                delta = now - then;
+
+                if(delta > interval){
+
+                    render();
+
+                    then = now - (delta % interval);
+                };
+                update();
             };
             
             main();
             
                 
         </script>
-        
+        <p>asfdasf</p>
     
 
 </body></html>
