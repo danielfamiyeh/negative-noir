@@ -13,15 +13,24 @@
                 filled = false,
                 adService,
                 banner,
+                bgColourList = ['#87ceeb', '#8F9BFE', '#FF5F4D', '#EB899E', '#9eeb89'],
+                loaded,
                 practiceText,
+                loggedIn,
                 maxNum = 1,
+                colIndex = 0,
+                social,
                 practiceLeft = 10,
                 scoreText,
                 spawnCount = 985,
                 count = 0,
                 text,
+                permaHighScore,
+                permaHardHighScore,
+                speed,
                 started = false,
                 hallOfFame = false,
+                loggedIn = false,
                 score = 0,
                 str = score.toString(),
                 highScore = localStorage.getItem('highScore') || 0,
@@ -32,6 +41,8 @@
 
             canvas.width = WIDTH;
             canvas.height = HEIGHT;
+
+            speed = ((WIDTH * HEIGHT) / 493996.444444);
 
             ctx.fillStyle = '#87ceeb';
             ctx.fillRect(0, 0, WIDTH, HEIGHT);
@@ -76,6 +87,43 @@
                     };
                 };
             };
+
+            var Circle = function(x, y, size, vx, vy){
+                this.x = x;
+                this.y = y;
+                this.size = size;
+                this.rgbCol = 'rgba(0,0,0,0.15)';
+                this.velX = vx;
+                this.velY = vy;
+                this.rect = {
+                    x : (this.x - (this.size / 2)),
+                    y : (this.y - (this.size / 2)),
+                    width : this.size,
+                    height : this.size
+                };
+
+                this.render = function(context) {
+                    context.fillStyle = this.rgbCol;
+                    context.beginPath();
+                    context.arc(this.x, this.y, (this.size / 2), 0, 2 * Math.PI);
+                    context.fill();
+                }
+
+                this.update = function(){
+                    this.x += this.velX;
+                    this.y += this.velY;
+
+                    if(this.x <= 0 || this.x >= WIDTH){
+                        this.velX *= -1;
+                    }
+
+                    if(this.y <= 0 || this.y >= HEIGHT){
+                        this.velY *= -1;
+                    }
+                }
+            }
+
+            var circList = [];
 
 
 
@@ -179,86 +227,58 @@
                     }
                     if (this.spawnPoint === 0) {
                         if (this.x < player.x - (WIDTH / 15.125)) {
-                            this.x += 4.5;
+                            this.x += speed;
                         }
                         if (this.y < player.y - (WIDTH / 15.125)) {
-                            this.y += 4.5;
+                            this.y += speed;
                         }
                     }
 
                     if (this.spawnPoint === 1) {
                         if (this.x > player.x) {
-                            this.x -= 4.5;
+                            this.x -= speed;
                         }
                         if (this.y < player.y - (WIDTH / 15.125)) {
-                            this.y += 4.5;
+                            this.y += speed;
                         };
                     }
 
                     if (this.spawnPoint === 2) {
                         if (this.x < player.x - (WIDTH / 15.125)) {
-                            this.x += 4.5;
+                            this.x += speed;
                         }
                         if (this.y > player.y) {
-                            this.y -= 4.5;
+                            this.y -= speed;
                         };
                     }
 
                     if (this.spawnPoint === 3) {
                         if (this.x > player.x) {
-                            this.x -= 4.5;
+                            this.x -= speed;
                         }
                         if (this.y > player.y) {
-                            this.y -= 4.5;
+                            this.y -= speed;
                         }
                     };
                 }
             };
-
-            function createBanner() {
-
-                banner.on("load", function(){
-                    console.log("Banner loaded " + banner.width, banner.height);
-                    bannerStatus.text = "Banner loaded";
+/*
+            function showInterstitial(){
+                interstitial.on("load", function(){
+                    loaded = true;
                 });
 
-                banner.on("fail", function(){
-                    console.log("Banner failed to load");
-                    bannerStatus.text = "Banner failed";
+                interstitial.on("dismiss", function(){
+                    loaded = false;
                 });
-
-                banner.on("show", function(){
-                    console.log("Banner shown a modal content");
-                    bannerStatus.text = "Banner show modal content";
-                });
-
-                banner.on("dismiss", function(){
-                    console.log("Banner dismissed the modal content");
-                    bannerStatus.text = "Banner dismissed modal";
-                });
-            };
-
+                return loaded;
+            }
+*/
 
 
             function randNum(upperBound) {
                 return Math.floor(Math.random() * upperBound);
             };
-
-            function init(){
-                adService = Cocoon.Ad.AdMob;
-                adService.configure({
-                     ios: {
-                          banner:"ca-app-pub-4277398501935238/2385445105"
-                     },
-                     android: {
-                          banner:"ca-app-pub-4277398501935238/2385445105"
-                     }
-                });
-
-                banner = adService.createBanner();
-                banner.load();
-                banner.show();
-            }
 
             function AABBCollision(shapeA, shapeB) {
                 if (shapeA.x + shapeA.width > shapeB.x &&
@@ -369,20 +389,6 @@
                         touchY > (HEIGHT / 1.43196721311) &&
                         touchY < (HEIGHT / 1.24347094)) {
 
-                        if(gameMode == 'normal'){
-                            if (score > highScore) {
-                                highScore = parseInt(score);
-                                localStorage.setItem('highScore', highScore);
-                            };
-                        }
-
-                        if(gameMode == 'hard'){
-                            if (score > hardHighScore) {
-                                hardHighScore = parseInt(score);
-                                localStorage.setItem('hardHighScore', hardHighScore);
-                            };
-                        }
-
                         score = 0;
                         gameState = 'play';
 
@@ -410,11 +416,31 @@
                 enemyList.push(newEnemy);
             };
 
+            function loginSocial() {
+              if (!social.isLoggedIn()) {
+                  social.login(function(loggedIn, error) {
+                       if (error) {
+                          console.error("login error: " + error.message);
+                       }
+                       else if (loggedIn) {
+                          console.log("login succeeded");
+                       }
+                       else {
+                          console.log("login cancelled");
+                       }
+                  });
+              }
+        }
 
             function render() {
                 ctx.clearRect(0,0,WIDTH,HEIGHT);
-                ctx.fillStyle = '#87ceeb';
+                ctx.fillStyle = bgColourList[colIndex];
+
                 ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+                for(var i = 0; i < circList.length; i++){
+                    circList[i].render(ctx);
+                }
 
                 if (gameState === 'help') {
                     ctx.fillStyle = '#000000';
@@ -512,7 +538,7 @@
                     ctx.fillText(text, (WIDTH / 2), (HEIGHT / 5.459375));
 
                     if(gameMode == 'normal'){
-                        if (score > highScore) {
+                        if (score > permaHighScore) {
                             ctx.fillText('Congratulations!', (WIDTH / 2), (HEIGHT / 2.0959808));
                             ctx.font = getFont(64);
                             ctx.fillText('You beat your normal high score.', (WIDTH / 2), (HEIGHT / 1.87245445));
@@ -520,7 +546,7 @@
                     }
 
                     else if(gameMode == 'hard'){
-                        if (score > hardHighScore) {
+                        if (score > permaHardHighScore) {
                             ctx.fillText('Congratulations!', (WIDTH / 2), (HEIGHT / 2.0959808));
                             ctx.font = getFont(64);
                             ctx.fillText('You beat your hard high score.', (WIDTH / 2), (HEIGHT / 1.87245445));
@@ -547,6 +573,18 @@
             };
 
             function update() {
+                if(circList.length < 11){
+                    var size = randNum(HEIGHT / 4)
+                    var circX = Math.floor((Math.random() * (WIDTH - size)) + (size));
+                    var circY = Math.floor((Math.random() * (HEIGHT - size)) + (size));
+
+                    circList.push(new Circle(circX, circY, size, Math.random(), Math.random()));
+                }
+
+                for(var i = 0; i < circList.length; i++){
+                    circList[i].update();
+                }
+
                 if (gameState === 'help') {
                     score = 0;
                     count = 0;
@@ -798,6 +836,16 @@
                                         else if(player.bullets[i].colour == enemyList[j].colour){
                                                 count += 1;
                                                 score += 1;
+
+                                                if(score % 20 == 0){
+                                                    if(colIndex < (bgColourList.length - 1)){
+                                                        colIndex++;
+                                                    }
+                                                    else{
+                                                        colIndex = 0;
+                                                    }
+                                                }
+                                                
                                             if(muteColour == '#000000'){
                                                 shoot.currentTime = 0;
                                                 shoot.play();
@@ -816,6 +864,15 @@
                             gameState = 'dead';
                             spawnCount = 985;
                             count = 0;
+
+                            /*
+
+                            interstitial.load();
+                            var shouldShow = showInterstitial();
+                            if(shouldShow){
+                                interstitial.show();
+                            }
+                            */
                         };
                     };
 
@@ -825,6 +882,20 @@
                             death.play();
                             deathPlayed = true;
                         };
+                        if(gameMode == 'normal'){
+                            if(score > highScore){
+                                permaHighScore = highScore;
+                                highScore = parseInt(score);
+                                localStorage.setItem('highScore', highScore);
+                            }
+                        }
+                        else if(gameMode == 'hard'){
+                            if(score > hardHighScore){
+                                permaHardHighScore = hardHighScore;
+                                hardHighScore = parseInt(score);
+                                localStorage.setItem('hardHighScore', hardHighScore);
+                            }
+                        }
 
                         player.isActive = false;
                         enemyList = [];
@@ -839,7 +910,6 @@
             var delta;
 
             function main() {
-                console.log(muteColour);
                 window.requestAnimationFrame(main);
 
                 now = Date.now();
@@ -854,14 +924,16 @@
                 update();
             };
 
-            function init(){
+            function init(){/*
                 adService = Cocoon.Ad.AdMob;
                 adService.configure({
                     ios: {
-                        banner:"ca-app-pub-4277398501935238/3803302703"
+                        banner:"ca-app-pub-4277398501935238/3803302703",
+                        interstitial:"ca-app-pub-4277398501935238/6048431904"
                     },
                     android: {
-                        banner:"ca-app-pub-4277398501935238/2385445105"
+                        banner:"ca-app-pub-4277398501935238/2385445105",
+                        interstitial:"ca-app-pub-4277398501935238/4960148302"
                     }
                 });
 
@@ -869,6 +941,24 @@
                 banner.setLayout('BOTTOM_CENTER');
                 banner.load();
                 banner.show();
+
+                interstitial = adService.createInterstitial();
+
+                if (Cocoon.getPlatform() === 'android') {
+
+                    social = Cocoon.Social.GooglePlayGames.init();
+                    social = Cocoon.Social.GooglePlayGames.getSocialInterface();
+                }
+
+                else if(Cocoon.getPlatform() === 'ios'){
+                    social = Cocoon.Social.GameCenter.init();
+                    social = Cocoon.Social.GameCenter.getSocialInterface();
+                };
+
+                loggedIn = social.isLoggedIn();
+                loginSocial();
+                */
+
                 main();
             };
 
