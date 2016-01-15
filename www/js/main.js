@@ -9,9 +9,9 @@
                 muteColour = '#000000',
                 firstTime = true,
                 fontSize,
-                gameMode,
                 filled = false,
                 adService,
+                leaderboard,
                 banner,
                 bgColourList = ['#87ceeb', '#8F9BFE', '#FF5F4D', '#EB899E', '#9eeb89'],
                 loaded,
@@ -22,6 +22,7 @@
                 social,
                 practiceLeft = 10,
                 scoreText,
+                socialService,
                 spawnCount = 985,
                 count = 0,
                 text,
@@ -33,9 +34,7 @@
                 loggedIn = false,
                 score = 0,
                 str = score.toString(),
-                highScore = localStorage.getItem('highScore') || 0,
-                hasPlayed = localStorage.getItem('hasPlayed') || false,
-                hardHighScore = localStorage.getItem('hardHighScore') || 0,
+                hardHighScore = /*localStorage.getItem('hardHighScore')|| */0,
                 WIDTH = window.innerWidth,
                 HEIGHT = window.innerHeight;
 
@@ -222,9 +221,6 @@
                 };
 
                 this.update = function() {
-                    if(Math.abs(this.x - this.originX == 0) && Math.abs(this.y - this.originY == 0)){
-                        this.key = null;
-                    }
                     if (this.spawnPoint === 0) {
                         if (this.x < player.x - (WIDTH / 15.125)) {
                             this.x += speed;
@@ -305,21 +301,35 @@
                 console.log(touchY);
 
                 if (gameState === 'start') {
-                    if(touchX > (WIDTH / 3.37328767) &&
-                        touchY > (HEIGHT / 2.41176471) &&
-                        touchX < (WIDTH / 1.39321075) &&
-                        touchY < (HEIGHT / 2.02469136)){
+                    if(touchX > (WIDTH / 8.41025641) &&
+                        touchY > (HEIGHT / 2.52456647) &&
+                        touchX < (WIDTH / 3.11392405) &&
+                        touchY < (HEIGHT / 1.65592417)){
 
-                        gameMode = 'normal';
                         gameState = 'help';
                     }
-                    if(touchX > (WIDTH / 2.58947368) &&
-                        touchY > (HEIGHT / 1.77831325) &&
-                        touchX < (WIDTH / 1.56937799) &&
-                        touchY < (HEIGHT / 1.59395248)){
 
-                        gameMode = 'hard';
-                        gameState = 'help';   
+                    if(touchX > (WIDTH / 1.80882353) &&
+                        touchY > (HEIGHT / 2.54664726) &&
+                        touchX < (WIDTH / 1.11818182) &&
+                        touchY < (HEIGHT / 1.59981685)){
+                        socialService.showLeaderboard(function(error){
+                            if (error)
+                                console.error("showLeaderbord error: " + error.message);
+                        });
+                        console.log('leaderboard');
+                    }
+
+                    if(touchX > (WIDTH / 8) &&
+                        touchY > (HEIGHT / 1.36912226) &&
+                        touchX < (WIDTH / 1.03114187) &&
+                        touchY < (HEIGHT / 1.28834808)){
+
+                        socialService.showAchievements(function(error){
+                            if (error)
+                                console.error("showLeaderbord error: " + error.message);
+                        });
+                        console.log('achievements');
                     }
                 }
 
@@ -384,15 +394,37 @@
                 }
 
                 else if (gameState === 'dead') {
-                    if (touchX > (WIDTH / 18.9230769231) &&
-                        touchX < (WIDTH / 1.07322929) &&
-                        touchY > (HEIGHT / 1.43196721311) &&
-                        touchY < (HEIGHT / 1.24347094)) {
+                    if(touchX > (WIDTH / 8.41025641) &&
+                        touchY > (HEIGHT / 2.52456647) &&
+                        touchX < (WIDTH / 3.11392405) &&
+                        touchY < (HEIGHT / 1.65592417)){
 
-                        score = 0;
+                        score = 0
                         gameState = 'play';
+                    }
 
-                    };
+                    if(touchX > (WIDTH / 8) &&
+                        touchY > (HEIGHT / 1.36912226) &&
+                        touchX < (WIDTH / 1.03114187) &&
+                        touchY < (HEIGHT / 1.28834808)){
+
+                        socialService.showAchievements(function(error){
+                            if (error)
+                                console.error("showLeaderbord error: " + error.message);
+                        });
+                        console.log('achievements');
+                    }
+
+                    if(touchX > (WIDTH / 1.80882353) &&
+                        touchY > (HEIGHT / 2.54664726) &&
+                        touchX < (WIDTH / 1.11818182) &&
+                        touchY < (HEIGHT / 1.59981685)){
+                        socialService.showLeaderboard(function(error){
+                            if (error)
+                                console.error("showLeaderbord error: " + error.message);
+                        });
+                        console.log('leaderboard');
+                    }
                 };
             };
 
@@ -415,22 +447,6 @@
 
                 enemyList.push(newEnemy);
             };
-
-            function loginSocial() {
-              if (!social.isLoggedIn()) {
-                  social.login(function(loggedIn, error) {
-                       if (error) {
-                          console.error("login error: " + error.message);
-                       }
-                       else if (loggedIn) {
-                          console.log("login succeeded");
-                       }
-                       else {
-                          console.log("login cancelled");
-                       }
-                  });
-              }
-        }
 
             function render() {
                 ctx.clearRect(0,0,WIDTH,HEIGHT);
@@ -481,8 +497,21 @@
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
 
-                    ctx.fillText('normal', (WIDTH / 2), ((HEIGHT / 2) - (HEIGHT / 14.0887097)));
-                    ctx.fillText('hard', (WIDTH / 2), ((HEIGHT / 2) + (HEIGHT / 14.0887097)));
+                    //ctx.fillText('normal', (WIDTH / 2), ((HEIGHT / 2) - (HEIGHT / 14.0887097)));
+                    //ctx.fillText('hard', (WIDTH / 2), ((HEIGHT / 2) + (HEIGHT / 14.0887097)));
+
+                    ctx.strokeStyle = 'black';
+                    ctx.beginPath();
+                    ctx.moveTo(WIDTH/8, HEIGHT/2.5);
+                    ctx.lineTo(WIDTH-WIDTH/1.5, HEIGHT/2);
+                    ctx.lineTo(WIDTH/8, HEIGHT/1.625);
+                    ctx.lineTo(WIDTH/8, HEIGHT/2.5);
+                    ctx.fillStyle = 'rgba(0,0,0,0.8)';
+                    ctx.fill();
+
+                    ctx.fillRect((WIDTH - (WIDTH / 3)), HEIGHT / 1.625, (WIDTH / 9.84), -(HEIGHT / 4.6462766));
+                    ctx.fillRect((WIDTH - (WIDTH / 3)) - (WIDTH / 8.94545455), HEIGHT / 1.625, (WIDTH / 9.84), -(HEIGHT / 6.28417266));
+                    ctx.fillRect((WIDTH - (WIDTH / 3)) + (WIDTH / 8.94545455), HEIGHT / 1.625, (WIDTH / 9.84), -(HEIGHT / 9.29255319));
 
                     ctx.fillStyle = '#000000'
                     ctx.font = getFont(168);
@@ -491,9 +520,15 @@
                     ctx.fillStyle = '#FFFFFF';
                     ctx.fillText('noir', ((WIDTH / 2) + ((WIDTH / 2) / 1.74285714)), (HEIGHT / 4.9));
 
-                    ctx.font = getFont(96);
+                    
                     ctx.fillStyle = muteColour;
-                    ctx.fillText('mute', (WIDTH / 2), (HEIGHT / -11.80800) + (HEIGHT / 1.06329884))
+                    ctx.font = getFont(96);
+                    ctx.fillText('mute', (WIDTH / 2), (HEIGHT / -11.80800) + (HEIGHT / 1.06329884));
+
+                    ctx.fillStyle = '#000000';
+                    ctx.font = getFont(128);
+                    ctx.fillText('achievements', (WIDTH / 2), (HEIGHT / 1.34384615));
+
                 }
               
 
@@ -535,48 +570,50 @@
                     text = 'you got: ';
                     text += score;
                     text += '.';
-                    ctx.fillText(text, (WIDTH / 2), (HEIGHT / 5.459375));
+                    ctx.fillText(text, (WIDTH / 2), (HEIGHT / 6.69348659));
 
-                    if(gameMode == 'normal'){
-                        if (score > permaHighScore) {
-                            ctx.fillText('Congratulations!', (WIDTH / 2), (HEIGHT / 2.0959808));
-                            ctx.font = getFont(64);
-                            ctx.fillText('You beat your normal high score.', (WIDTH / 2), (HEIGHT / 1.87245445));
-                        };
-                    }
 
-                    else if(gameMode == 'hard'){
-                        if (score > permaHardHighScore) {
-                            ctx.fillText('Congratulations!', (WIDTH / 2), (HEIGHT / 2.0959808));
-                            ctx.font = getFont(64);
-                            ctx.fillText('You beat your hard high score.', (WIDTH / 2), (HEIGHT / 1.87245445));
-                        };
+                    if (score > permaHardHighScore) {
+                        ctx.fillText('Congratulations!', (WIDTH / 2), (HEIGHT / 4.58530184));
+                        ctx.font = getFont(64);
+                        ctx.fillText('You beat your hard high score.', (WIDTH / 2), (HEIGHT / 3.86504425));
                     };
 
                     ctx.font = getFont(64);
-                    text = 'your ';
-                    text += gameMode;
-                    text += ' high score is: ';
-                    (gameMode == 'normal') ? text += highScore : text += hardHighScore;
+                    text = 'your high score is: ';
+                    text += hardHighScore;
                     text += '.';
 
                     ctx.fillText(text, (WIDTH / 2), (HEIGHT / 10.91874));
 
-                    ctx.fillStyle = playColour
-                    ctx.font = getFont(160);
-                    ctx.fillText('play again', (WIDTH / 2), ((HEIGHT / 2) + ((HEIGHT / 2) / 2.09975962)));
+                    ctx.strokeStyle = 'black';
+                    ctx.beginPath();
+                    ctx.moveTo(WIDTH/8, HEIGHT/2.5);
+                    ctx.lineTo(WIDTH-WIDTH/1.5, HEIGHT/2);
+                    ctx.lineTo(WIDTH/8, HEIGHT/1.625);
+                    ctx.lineTo(WIDTH/8, HEIGHT/2.5);
+                    ctx.fillStyle = 'rgba(0,0,0,0.8)';
+                    ctx.fill();
+
+                    ctx.fillRect((WIDTH - (WIDTH / 3)), HEIGHT / 1.625, (WIDTH / 9.84), -(HEIGHT / 4.6462766));
+                    ctx.fillRect((WIDTH - (WIDTH / 3)) - (WIDTH / 8.94545455), HEIGHT / 1.625, (WIDTH / 9.84), -(HEIGHT / 6.28417266));
+                    ctx.fillRect((WIDTH - (WIDTH / 3)) + (WIDTH / 8.94545455), HEIGHT / 1.625, (WIDTH / 9.84), -(HEIGHT / 9.29255319));
 
                     ctx.font = getFont(96);
                     ctx.fillStyle = muteColour;
                     ctx.fillText('mute', (WIDTH / 2), (HEIGHT / -11.80800) + (HEIGHT / 1.06329884))
+
+                    ctx.fillStyle = '#000000';
+                    ctx.font = getFont(128);
+                    ctx.fillText('achievements', (WIDTH / 2), (HEIGHT / 1.34384615));
                 };
             };
 
             function update() {
                 if(circList.length < 11){
-                    var size = randNum(HEIGHT / 4)
-                    var circX = Math.floor((Math.random() * (WIDTH - size)) + (size));
-                    var circY = Math.floor((Math.random() * (HEIGHT - size)) + (size));
+                    var size = randNum(HEIGHT / 16)
+                    var circX = randNum(WIDTH);
+                    var circY = randNum(HEIGHT);
 
                     circList.push(new Circle(circX, circY, size, Math.random(), Math.random()));
                 }
@@ -663,121 +700,43 @@
                     shouldSpawn = randNum(1000);
 
                     if(shouldSpawn >= spawnCount){
-                        if(gameMode == 'normal'){
-                            switch(spawnCount){
-                                case 985:
-                                    maxNum = 1;
-                                    break;
-                                
-                                case 980:
-                                    maxNum = 2;
-                                    break;
-                                
-                                case 975:
-                                    maxNum = 3;
-                                    break;
-                                
-                                case 970:
-                                    maxNum = 4;
-                                    break;
-                                
-                                case 965:
-                                    maxNum = 5;
-                                    break;
+                        switch(spawnCount){
+                            case 985:
+                                maxNum = 11;
+                                break;
+                            
+                            case 980:
+                                maxNum = 13;
+                                break;
+                            
+                            case 975:
+                                maxNum = 15;
+                                break;
+                            
+                            case 970:
+                                maxNum = 17;
+                                break;
+                            
+                            case 965:
+                                maxNum = 20;
+                                break;
 
-                                case 960:
-                                    maxNum = 6;
-                                    break;
-                                
-                                case 955:
-                                    maxNum = 7;
-                                    break;
-                                
-                                case 950:
-                                    maxNum = 8;
-                                    break;
-                                
-                                case 945:
-                                    maxNum = 9;
-                                    break;
-                                
-                                case 940:
-                                    maxNum = 11;
-                                    break;
-                                
-                                case 935:
-                                    maxNum = 13;
-                                    break;
-                                
-                                case 930:
-                                    maxNum = 15;
-                                    break;
-                                
-                                case 925:
-                                    maxNum = 17;
-                                    break;
-                                
-                                case 920:
-                                    maxNum = 20;
-                                    break;
-
-                                case 915:
-                                    maxNum = 23;
-                                    break;
-                                
-                                case 910:
-                                    maxNum = 26;
-                                    break;
-                                
-                                case 905:
-                                    maxNum = 29;
-                                    break;
-                                
-                                case 900:
-                                    maxNum = 31;
-                                    break;
-                            }
-                        }
-
-                        else if(gameMode == 'hard'){
-                            switch(spawnCount){
-                                case 985:
-                                    maxNum = 11;
-                                    break;
-                                
-                                case 980:
-                                    maxNum = 13;
-                                    break;
-                                
-                                case 975:
-                                    maxNum = 15;
-                                    break;
-                                
-                                case 970:
-                                    maxNum = 17;
-                                    break;
-                                
-                                case 965:
-                                    maxNum = 20;
-                                    break;
-
-                                case 960:
-                                    maxNum = 23;
-                                    break;
-                                
-                                case 955:
-                                    maxNum = 26;
-                                    break;
-                                
-                                case 950:
-                                    maxNum = 29;
-                                    break;
-                                
-                                case 955:
-                                    maxNum = 31;
-                                    break;
-                            };
-                        }
+                            case 960:
+                                maxNum = 23;
+                                break;
+                            
+                            case 955:
+                                maxNum = 26;
+                                break;
+                            
+                            case 950:
+                                maxNum = 29;
+                                break;
+                            
+                            case 955:
+                                maxNum = 31;
+                                break;
+                        };
                             
                         if(spawnCount <= 800){
                             maxNum = maxNum * 2;
@@ -859,6 +818,34 @@
                         };
                     };
 
+                    if(score == 50){
+                        socialService.submitAchievement('CgkImrjO8Y8JEAIQAg', function(error){
+                            if (error)
+                                console.error("showLeaderbord error: " + error.message);
+                        });
+                    }
+
+                    if(score == 100){
+                        socialService.submitAchievement('CgkImrjO8Y8JEAIQAw', function(error){
+                            if (error)
+                                console.error("showLeaderbord error: " + error.message);
+                        });
+                    }
+
+                    if(score == 150){
+                        socialService.submitAchievement('CgkImrjO8Y8JEAIQBA', function(error){
+                            if (error)
+                                console.error("showLeaderbord error: " + error.message);
+                        });
+                    }
+
+                    if(score == 200){
+                        socialService.submitAchievement('CgkImrjO8Y8JEAIQBQ', function(error){
+                            if (error)
+                                console.error("showLeaderbord error: " + error.message);
+                        });
+                    }
+
                     for (var i = 0; i < enemyList.length; i++) {
                         if (AABBCollision(player.rect, enemyList[i])) {
                             gameState = 'dead';
@@ -882,19 +869,15 @@
                             death.play();
                             deathPlayed = true;
                         };
-                        if(gameMode == 'normal'){
-                            if(score > highScore){
-                                permaHighScore = highScore;
-                                highScore = parseInt(score);
-                                localStorage.setItem('highScore', highScore);
-                            }
-                        }
-                        else if(gameMode == 'hard'){
-                            if(score > hardHighScore){
-                                permaHardHighScore = hardHighScore;
-                                hardHighScore = parseInt(score);
-                                localStorage.setItem('hardHighScore', hardHighScore);
-                            }
+
+                        if(score > hardHighScore){
+                            permaHardHighScore = hardHighScore;
+                            hardHighScore = parseInt(score);
+                            localStorage.setItem('hardHighScore', hardHighScore);
+                            socialService.submitScore(hardHighScore, function(error){
+                                if (error)
+                                    console.error("submitScore error: " + error.message);
+                            }, {leaderboardID : 'CgkImrjO8Y8JEAIQAA'});
                         }
 
                         player.isActive = false;
@@ -924,7 +907,7 @@
                 update();
             };
 
-            function init(){/*
+            function init(){
                 adService = Cocoon.Ad.AdMob;
                 adService.configure({
                     ios: {
@@ -944,20 +927,22 @@
 
                 interstitial = adService.createInterstitial();
 
-                if (Cocoon.getPlatform() === 'android') {
-
-                    social = Cocoon.Social.GooglePlayGames.init();
-                    social = Cocoon.Social.GooglePlayGames.getSocialInterface();
+                if(/Android/i.test(navigator.userAgent)) {
+                    Cocoon.Social.GooglePlayGames.init({});
+                    socialService = Cocoon.Social.GooglePlayGames.getSocialInterface();
                 }
 
-                else if(Cocoon.getPlatform() === 'ios'){
-                    social = Cocoon.Social.GameCenter.init();
-                    social = Cocoon.Social.GameCenter.getSocialInterface();
-                };
+                if(/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                    Cocoon.Social.GameCenter.init({});
+                    socialService = Cocoon.Social.GameCenter.getSocialInterface();
+                }
 
-                loggedIn = social.isLoggedIn();
-                loginSocial();
-                */
+                socialService.login();
+
+                socialService.submitScore(hardHighScore, function(error){
+                    if (error)
+                        console.error("submitScore error: " + error.message);
+                }, {leaderboardID : 'CgkImrjO8Y8JEAIQAA'});
 
                 main();
             };
